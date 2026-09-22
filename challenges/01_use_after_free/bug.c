@@ -92,17 +92,17 @@ static Widget *widget_new(const VTable *vt, int id, const char *label) {
     *   생각해보기: sizeof(Widget) 대신 sizeof *w 로 쓰면 어떤 장점이 있을까?
     */
     Widget *w = malloc(sizeof *w);
-    if (!w) { perror("malloc"); exit(1); }
+    if (!w) { perror("malloc"); exit(1); }//w가 null일때 perror에러표시 , exit 강제종료(예외처리)[오염]
     w->vtbl = vt;
     w->id = id;
-    w->closed = 0;
+    w->closed = 0;  
     strncpy(w->label, label, sizeof(w->label) - 1);
     w->label[sizeof(w->label) - 1] = '\0';
     return w;
 }
 
 static void widget_destroy(Widget *w) {
-    free(w);          
+    free(w); //w free 함 문제시발점
 }
 
 /* ── Screen ──────────────────────────────────────────────────── */
@@ -112,22 +112,34 @@ static void screen_add(Screen *s, Widget *w) {
 
 static void screen_dispatch(Screen *s, int code) {
     for (int i = 0; i < s->count; i++) {
+        if(s->items[i]==NULL){//null 슬롯인지
+            continue;//건너뛰기
+        }
         Widget *w = s->items[i];
         w->vtbl->on_event(w, code);
+        if(w->closed){//w가 닫혀있는지 확인
+            free(w);//w 해제
+            s->items[i] = NULL;//s를 null로 스크린 포인터 무효화
+        }
+
+
     }
 }
 
 static void screen_render(Screen *s) {
     for (int i = 0; i < s->count; i++) {
-        Widget *w = s->items[i];
-        w->vtbl->render(w);      
+        if(s->items[i]== NULL){//s->item 확인 후 null인지 확인
+            continue;//건너뛰기
+        }
+        Widget *w = s->items[i];//가져오기
+        w->vtbl->render(w);
+
     }
 }
 
 static void dialog_on_event(Widget *self, int code) {
     if (code == 1) {
         self->closed = 1;
-        widget_destroy(self);   
     }
 }
 
