@@ -62,20 +62,20 @@ static void list_init(IntList *l) {
 static void list_ensure(IntList *l, size_t need) {
     if (need <= l->cap) return;
 
-    size_t newcap = l->cap ? l->cap * 2 : 8;
+    size_t newcap = l->cap ? l->cap * 2 : 8; //32 
     while (newcap < need) newcap *= 2;
 
-    int *p = realloc(l->data, l->cap * sizeof(int));
+    int *p = realloc(l->data, newcap * sizeof(int));//frame 7 realloc 옛용량 호출 len =16 cap=16
     if (!p) { perror("realloc"); free(l->data); exit(1); }
 
-    l->data = p;
-    l->cap  = newcap;
+    l->data = p;//len 8 cap 8
+    l->cap  = newcap;//newcap 16
 }
 
 static void list_push(IntList *l, int x) {
-    if (l->len == l->cap) list_ensure(l, l->cap + 1);
+    if (l->len == l->cap) list_ensure(l, l->cap + 1);//프로그램 생각은 cap은 16
     l->data[l->len++] = x;
-}
+}//
 
 static long long list_sum(const IntList *l) {
     long long s = 0;
